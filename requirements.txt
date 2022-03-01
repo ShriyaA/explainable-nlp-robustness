@@ -1,0 +1,5 @@
+captum==0.4.1
+click==8.0.4
+torch==1.10.2
+transformers==4.16.2
+ipython==8.1.0

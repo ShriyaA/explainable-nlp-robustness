@@ -1,4 +1,5 @@
 from captum.attr import visualization as viz
+from captum.attr import LayerIntegratedGradients
 import torch
 
 class SaliencyMapVisualizer():
@@ -41,9 +42,13 @@ class SaliencyMapVisualizer():
     def summarize_attributions(self, attributions):
         attributions = attributions.sum(dim=-1).squeeze(0)
         attributions = attributions / torch.norm(attributions)
-        return attributions
+        return attributions 
 
-    def visualize_attribution(self, text):
+    def resolve_expl_method(self):
+        if self.expl_method == 'IntegratedGradients':
+            return LayerIntegratedGradients
+
+    def visualize_attribution(self, text, true_label):
         input_ids, ref_input_ids = self.construct_input_ref_pair(text, self.tokenizer, self.tokenizer.pad_token_id, self.tokenizer.sep_token_id, self.tokenizer.cls_token_id)
         position_ids, ref_position_ids = self.construct_input_ref_pos_id_pair(input_ids)
         attention_mask = self.construct_attention_mask(input_ids)
@@ -51,20 +56,22 @@ class SaliencyMapVisualizer():
         #print(scores)
         indices = input_ids[0].detach().tolist()
         all_tokens = self.tokenizer.convert_ids_to_tokens(indices)
+        expl_method = self.resolve_expl_method()
 
-        expl = self.expl_method(self.forward_func, self.model.roberta.embeddings.word_embeddings)
+        expl = expl_method(self.forward_func, self.model.roberta.embeddings.word_embeddings)
         attributions, delta = expl.attribute(inputs=input_ids,
                                         baselines=ref_input_ids,
                                         additional_forward_args=(position_ids, attention_mask),
                                         return_convergence_delta=True)
         attributions_sum = self.summarize_attributions(attributions)
+
         sentence_vis = viz.VisualizationDataRecord(
                 attributions_sum,
                 torch.max(torch.softmax(scores[0], dim=0)),
                 torch.argmax(scores),
-                torch.argmax(scores),
+                true_label,
                 text,
                 attributions_sum.sum(),
                 all_tokens,
                 delta)
-        viz.visualize_text([sentence_vis])
+        return viz.visualize_text([sentence_vis])

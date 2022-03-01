@@ -1,11 +1,11 @@
 import click
-from .visualize_saliency.visualize import visualize
+from visualize_saliency.visualize import visualize
 
 @click.group()
 def main():
     pass
 
-main.add_command()
+main.add_command(visualize)
 
 if __name__ == '__main__':
-    main(visualize, "visualize")
+    main()
