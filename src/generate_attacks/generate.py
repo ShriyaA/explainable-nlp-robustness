@@ -4,9 +4,9 @@ import csv
 
 from functools import partial
 from utils.utils import check_paths_exist
-# from textattack.transformations import WordSwapWordNet, WordSwapMaskedLM
-# from textattack.augmentation import Augmenter
-# from textattack.constraints.pre_transformation import StopwordModification
+from textattack.transformations import WordSwapWordNet, WordSwapMaskedLM
+from textattack.augmentation import Augmenter
+from textattack.constraints.pre_transformation import StopwordModification
 from generate_attacks.word_deletion import word_deletion
 from generate_attacks.misspelling import misspelling
 
