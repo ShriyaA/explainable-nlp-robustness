@@ -4,10 +4,11 @@ import csv
 
 from functools import partial
 from utils.utils import check_paths_exist
-from textattack.transformations import WordSwapWordNet, WordSwapMaskedLM
-from textattack.augmentation import Augmenter
-from textattack.constraints.pre_transformation import StopwordModification
+# from textattack.transformations import WordSwapWordNet, WordSwapMaskedLM
+# from textattack.augmentation import Augmenter
+# from textattack.constraints.pre_transformation import StopwordModification
 from generate_attacks.word_deletion import word_deletion
+from generate_attacks.misspelling import misspelling
 
 @click.command()
 @click.option("--attack_type", type=click.Choice(['word_deletion', 'misspelling', 'synonym_substitution']), required=True)
@@ -43,6 +44,9 @@ def generate(**config):
             writer.writerows(output)
     elif attack_type == 'word_deletion':
         transformation = partial(word_deletion, config['data_file'], config['model_name'], config['explainability_method'], config['output_file'])
+        transformation()
+    elif attack_type == 'misspelling':
+        transformation = partial(misspelling, config['data_file'], config['model_name'], config['explainability_method'], config['output_file'])
         transformation()
     else:
         raise NotImplementedError("Attack type not implemented")
