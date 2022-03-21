@@ -1,5 +1,7 @@
 import click
 import csv
+import os
+
 from visualize_saliency.visualize import get_attribution_scores
 from visualize_saliency.word_attribution import word_attribution
 
@@ -25,7 +27,8 @@ def get_edited_string(tokenizer, score_word_list, tokens, num_words_to_remove = 
     return string
 
 def word_deletion(input_file, model_name, expl_method, output_file, seed = None, remove_punctuation=True):
-    out_sentences = []
+    out_sentences_1 = []
+    out_sentences_2 = []
 
     tokenizer, scores = get_attribution_scores(model_name, expl_method, input_file, seed, remove_punctuation)
     for input_ids, token_scores, true_label in scores:
@@ -42,9 +45,15 @@ def word_deletion(input_file, model_name, expl_method, output_file, seed = None,
         orig = tokenizer.convert_tokens_to_string(tokens)
         edited1 = get_edited_string(tokenizer, score_word_list,  tokens, 1)
         edited2 = get_edited_string(tokenizer, score_word_list,  tokens, 2)
-        out_sentences.append([orig, edited1, edited2, true_label])
+        out_sentences_1.append([orig, edited1, true_label])
+        out_sentences_2.append([orig, edited2, true_label])
 
+    head, tail = os.path.splitext(output_file)
     # Write text with deleted words to output file
-    with open(output_file, 'w') as csvfile:
+    with open(head+"_1"+tail, 'w') as csvfile:
         csvwriter = csv.writer(csvfile)
-        csvwriter.writerows(out_sentences)
+        csvwriter.writerows(out_sentences_1)
+
+    with open(head+"_2"+tail, 'w') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerows(out_sentences_2)

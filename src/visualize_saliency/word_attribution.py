@@ -13,7 +13,7 @@ def word_attribution(tokens, token_attr_scores):
     curr_score = 0
     curr_str = ""
     for i in range(len(tokens)):
-        if (tokens[i][0] == 'Ġ'):
+        if (tokens[i][0] == 'Ġ' and len(curr_list) != 0):
             score_word_list.append((curr_score, curr_list, curr_str))
             curr_score = 0
             curr_list = []

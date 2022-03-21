@@ -90,4 +90,4 @@ class SaliencyMapVisualizer():
                 attributions_sum.sum(),
                 all_tokens,
                 delta)
-        return viz.visualize_text([sentence_vis])
+        return (viz.visualize_text([sentence_vis]), attributions_sum.detach().tolist(), all_tokens)
