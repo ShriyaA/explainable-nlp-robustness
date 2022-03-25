@@ -4,11 +4,9 @@ import csv
 
 from functools import partial
 from utils.utils import check_paths_exist
-from textattack.transformations import WordSwapWordNet, WordSwapMaskedLM
-from textattack.augmentation import Augmenter
-from textattack.constraints.pre_transformation import StopwordModification
 from generate_attacks.word_deletion import word_deletion
 from generate_attacks.misspelling import misspelling
+from generate_attacks.synonym_substitution import synonym_substitution
 
 @click.command()
 @click.option("--attack_type", type=click.Choice(['word_deletion', 'misspelling', 'synonym_substitution']), required=True)
@@ -35,9 +33,8 @@ def generate(**config):
             for row in reader:
                 text = row[0]
                 label = row[1]
-                index = row[2]
                 attacks = transformation(text)
-                output.extend([(x, label, index) for x in attacks])
+                output.extend([(text, x, label) for x in attacks])
 
         with open(output_file, 'w') as f:
             writer = csv.writer(f)
@@ -52,12 +49,5 @@ def generate(**config):
         raise NotImplementedError("Attack type not implemented")
 
 
-def synonym_substitution(substitution_method, pct_words_to_swap, transformations_per_example, sample):
-    if substitution_method == 'wordnet':
-        transformation = WordSwapWordNet()
-    else:
-        transformation = WordSwapMaskedLM()
 
-    augmenter = Augmenter(transformation=transformation, constraints=[StopwordModification()], pct_words_to_swap=pct_words_to_swap, transformations_per_example=transformations_per_example)
-    return augmenter.augment(sample)
     
