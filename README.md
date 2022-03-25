@@ -28,6 +28,16 @@ This project uses Python 3.8
 
 	python src/__main__.py visualize input.txt
 	
+## Generate attacks
+
+Word Deletion:
+
+	python src/__main__.py generate data/glue-sst2-validation.csv --attack_type word_deletion
+
+Misspelling:
+
+	python src/__main__.py generate data/glue-sst2-validation.csv --attack_type misspelling
+		
 ## Input format
 
 The input file should be a two-column csv file with text sample in the first column and true label in the second column. Example:
