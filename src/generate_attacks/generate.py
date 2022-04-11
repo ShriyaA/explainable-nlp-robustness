@@ -10,6 +10,7 @@ from generate_attacks.misspelling import misspelling
 from generate_attacks.synonym_substitution import synonym_substitution
 from attribution.attribution import Attribution
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from tqdm import tqdm
 
 @click.command()
 @click.option("--attack_type", type=click.Choice(['word_deletion', 'misspelling', 'synonym_substitution']), required=True)
@@ -50,24 +51,28 @@ def generate(**config):
     
     output = []
 
+    num_lines = 0
     with open(data_file) as f:
-        reader = csv.reader(f)
-        for row in reader:
-            text = row[0]
-            label = row[1]
-            if target_selection == 'k_most_attributed' or target_selection == 'k_least_attributed':
-                scores = attributor.get_attribution(text, label)
-                target_indices = torch.topk(scores, config['target_selection_k'], largest=target_selection=='k_most_attributed').indices.tolist()
-            else:
-                target_indices = torch.randint(0, scores.shape[0], (config['target_selection_k'],))
-            print(target_indices)
-            attacks = transformation(text, label, target_indices)
-            output.extend([(text, x, label) for x in attacks])
+        num_lines = sum(1 for line in f)
 
-        with open(output_file, 'w') as f:
-            writer = csv.writer(f)
-            writer.writerows(output)
+    with tqdm(total=num_lines) as pbar:
+        with open(data_file) as f:
+            reader = csv.reader(f)
+            for row in tqdm(reader):
+                text = row[0]
+                label = row[1]
+                if target_selection == 'k_most_attributed' or target_selection == 'k_least_attributed':
+                    scores, _ = attributor.get_attribution(text, label)
+                    target_indices = torch.topk(scores, config['target_selection_k'], largest=target_selection=='k_most_attributed').indices.tolist()
+                else:
+                    target_indices = torch.randint(0, scores.shape[0], (config['target_selection_k'],))
+                attacks = transformation(text, target_indices)
+                output.extend([(text, x, label) for x in attacks])
+                pbar.update(1)
 
+            with open(output_file, 'w') as f:
+                writer = csv.writer(f)
+                writer.writerows(output)
 
 
 

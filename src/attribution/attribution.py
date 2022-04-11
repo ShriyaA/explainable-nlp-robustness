@@ -54,6 +54,8 @@ class Attribution():
         position_ids, ref_position_ids = self.construct_input_ref_pos_id_pair(input_ids)
         attention_mask = self.construct_attention_mask(input_ids)
 
+        scores = self.predict(input_ids, position_ids, attention_mask)
+
         indices = input_ids[0].detach().tolist()
         expl_method = self.resolve_expl_method()
 
@@ -67,7 +69,7 @@ class Attribution():
         attributions_sum = attributions_sum[1:][:-1]
         if word_level:
             attributions_sum = self.word_level_attribution(tokens, attributions_sum.tolist())
-        return attributions_sum
+        return attributions_sum, torch.argmax(scores)
 
     def word_level_attribution(self, tokens, token_attr_scores, combination_method='avg'):
         '''
@@ -82,7 +84,6 @@ class Attribution():
         curr_list = []
         curr_scores = []
         curr_str = ""
-        print(tokens)
         for i in range(len(tokens)):
             if (tokens[i][0] == 'Ġ' and len(curr_list) != 0):
                 if combination_method == 'sum':
