@@ -4,7 +4,7 @@ from textattack.augmentation import Augmenter
 from textattack.constraints.pre_transformation import StopwordModification
 from textattack.constraints.grammaticality import PartOfSpeech
 
-def synonym_substitution(substitution_method, pct_words_to_swap, transformations_per_example, sample):
+def synonym_substitution(substitution_method, pct_words_to_swap, transformations_per_example, sample, true_label):
     if substitution_method == 'wordnet':
         transformation = WordSwapWordNet()
     else:

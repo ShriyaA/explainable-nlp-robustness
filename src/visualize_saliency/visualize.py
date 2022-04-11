@@ -89,7 +89,7 @@ def clean_text(text):
     return text
 
 
-def get_attribution_scores(model_name, expl_method, input_file, seed = None, remove_punctuation=True):
+def get_attribution_scores(model_name, expl_method, text, true_label, seed = None, remove_punctuation=False):
     '''
     returns:
     tokenizer
@@ -102,8 +102,6 @@ def get_attribution_scores(model_name, expl_method, input_file, seed = None, rem
     torch.manual_seed(seed)
     random.seed(seed)
 
-    check_paths_exist(input_file)
-
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -114,22 +112,8 @@ def get_attribution_scores(model_name, expl_method, input_file, seed = None, rem
 
     viz = SaliencyMapVisualizer(model, tokenizer, device, expl_method)
 
-    scores = []
-    idx = 0
-    num_lines = 0
-    with open(input_file) as f:
-        num_lines = sum(1 for line in f)
-    
-    with tqdm.tqdm(total=num_lines) as pbar:
-        with open(input_file) as f:
-            reader = csv.reader(f)
-            for row in reader:
-                text = row[0]
-                true_label = row[1]
-                if remove_punctuation:
-                    text = clean_text(text)
-                scores.append(viz.get_attribution(text, true_label))
-                idx += 1
-                pbar.update(1)
+    if remove_punctuation:
+        text = clean_text(text)
+    score = viz.get_attribution(text, true_label)
 
-    return tokenizer, scores
+    return tokenizer, score
