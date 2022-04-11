@@ -9,8 +9,8 @@ from attribution.attribution import Attribution
 from evaluation import scoring
 
 @click.command()
-@click.option("--output_file", type=str, default="./output/evaluation.csv")
-@click.option("--evaluation_method", type=click.Choice(['cosine', 'l_inf']))
+@click.option("--output_file", type=str, default="./output/scores.csv")
+@click.option("--evaluation_method", type=click.Choice(['cosine', 'l_inf']), default='cosine')
 @click.option("--model_name", type=str, default="textattack/roberta-base-SST-2", help="Huggingface model id")
 @click.option("--explainability_method", type=str, default="IntegratedGradients", help="Algorithm to use for generating saliency maps")
 @click.argument('attack_file')
