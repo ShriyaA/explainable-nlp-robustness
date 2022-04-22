@@ -48,7 +48,7 @@ class Attribution():
         if self.expl_method == 'IntegratedGradients':
             return LayerIntegratedGradients
 
-    def get_attribution(self, text, true_label, word_level=True):
+    def get_attribution(self, text, true_label, word_level=True, combination_method='avg'):
         
         input_ids, ref_input_ids = self.construct_input_ref_pair(text, self.tokenizer, self.tokenizer.pad_token_id, self.tokenizer.sep_token_id, self.tokenizer.cls_token_id)
         position_ids, ref_position_ids = self.construct_input_ref_pos_id_pair(input_ids)
@@ -68,7 +68,7 @@ class Attribution():
         tokens = self.tokenizer.convert_ids_to_tokens(indices)[1:][:-1]
         attributions_sum = attributions_sum[1:][:-1]
         if word_level:
-            attributions_sum = self.word_level_attribution(tokens, attributions_sum.tolist())
+            attributions_sum = self.word_level_attribution(tokens, attributions_sum.tolist(), combination_method)
         return attributions_sum, torch.argmax(scores)
 
     def word_level_attribution(self, tokens, token_attr_scores, combination_method='avg'):
