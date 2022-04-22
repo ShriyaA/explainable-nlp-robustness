@@ -48,6 +48,8 @@ def extend_scores(scores, deleted_indexes):
 
 @click.command()
 @click.option('--pct_candidates', type=float, default=0.3)
+@click.option('--max_candidates', type=int, default=5)
+@click.option('--substitution_method', type=click.Choice(['wordnet', 'embedding', 'masked-lm']))
 @click.option('--target_selection', type=click.Choice(['most', 'least', 'random']), default='most')
 @click.option("--evaluation_method", type=click.Choice(['cosine', 'l_inf']), default='cosine')
 @click.option("--stopping_threshold", type=float, default=0.5)
@@ -72,7 +74,7 @@ def greedy_search(**config):
     model.zero_grad()
 
     if attack_type == 'synonym_substitution':
-        transformation = partial(synonym_substitution)
+        transformation = partial(synonym_substitution, config['substitution_method'], config['max_candidates'])
     elif attack_type == 'word_deletion':
         transformation = partial(word_deletion)
     elif attack_type == 'misspelling':
@@ -88,7 +90,7 @@ def greedy_search(**config):
 
     with open(output_file, 'a') as f:
         writer = csv.writer(f)
-        writer.writerow(['original_text', 'adversarial_text', 'label', 'score'])
+        writer.writerow(output)
 
     with tqdm(total=num_lines) as pbar:
         with open(data_file) as f:
@@ -114,7 +116,20 @@ def greedy_search(**config):
                     min_text = None
                     min_pred = None
                     for idx in target_indices:
-                        new_attack = transformation(text, curr_deleted_idx + [idx])[0]
+                        new_attacks = transformation(text, curr_deleted_idx + [idx])[0]
+                        new_attack = new_attacks[0]
+
+                        if attack_type == 'synonym_substitution':
+                            current_word_min_score = float('inf')
+                            best_attack = new_attacks[0]
+                            for i,attack in enumerate(new_attacks):
+                                current_word_new_attr, current_word_pred = attributor.get_attribution(attack, label, word_level=True, combination_method=config['combination_method'])
+                                current_word_score = scoring_func(attr_scores, current_word_new_attr)
+                                if current_word_score < current_word_min_score:
+                                    current_word_min_score = current_word_score
+                                    best_attack = new_attacks[i]
+                            new_attack = best_attack
+                        
                         new_attr, pred = attributor.get_attribution(new_attack, label, word_level=True, combination_method=config['combination_method'])
                         
                         if attack_type == 'word_deletion':
@@ -138,6 +153,6 @@ def greedy_search(**config):
                 if similarity_score <= config["stopping_threshold"] and curr_pred == label:
                     with open(output_file, 'a') as f:
                         writer = csv.writer(f)
-                        writer.writerow([text, curr_text, label, round(similarity_score, 2)])
+                        writer.writerow([text, curr_text, label, round(similarity_score, 4), config['attack_type'], curr_deleted_idx])
                 
                 pbar.update(1)

@@ -1,14 +1,24 @@
-import imp
-from textattack.transformations import WordSwapWordNet, WordSwapMaskedLM
+from textattack.transformations import WordSwapWordNet, WordSwapMaskedLM, WordSwapEmbedding
 from textattack.augmentation import Augmenter
 from textattack.constraints.pre_transformation import StopwordModification
 from textattack.constraints.grammaticality import PartOfSpeech
+from textattack.shared.attacked_text import AttackedText
 
-def synonym_substitution(substitution_method, pct_words_to_swap, transformations_per_example, sample, true_label):
+def synonym_substitution(substitution_method, max_candidates, sample, indices_to_swap):
     if substitution_method == 'wordnet':
         transformation = WordSwapWordNet()
+    elif substitution_method == 'embedding':
+        transformation = WordSwapEmbedding(max_candidates=max_candidates)
+    elif substitution_method == 'masked-lm':
+        transformation = WordSwapMaskedLM(max_candidates=max_candidates)
     else:
-        transformation = WordSwapMaskedLM()
+        raise NotImplementedError()
+    sample = AttackedText(sample)
+    result = transformation._get_transformations(sample, indices_to_swap)
+    result = [x.text for x in result]
+    return result
 
-    augmenter = Augmenter(transformation=transformation, constraints=[StopwordModification(), PartOfSpeech()], pct_words_to_swap=pct_words_to_swap, transformations_per_example=transformations_per_example)
-    return augmenter.augment(sample)
+
+if __name__=='__main__':
+    print(synonym_substitution('embedding', 5,"The movie is great", [1]))
+    print(synonym_substitution('masked-lm', 5,"The movie is great", [1]))
