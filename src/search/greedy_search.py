@@ -132,6 +132,8 @@ def greedy_search(**config):
                     similarity_score = min_score
                     curr_text = min_text
                     curr_pred = min_pred
+                    if curr_pred != label:
+                        break
                 
                 if similarity_score <= config["stopping_threshold"] and curr_pred == label:
                     with open(output_file, 'a') as f:
