@@ -64,7 +64,7 @@ def generate(**config):
                 text = row[0]
                 label = row[1]
                 if target_selection == 'k_most_attributed' or target_selection == 'k_least_attributed':
-                    scores, _ = attributor.get_attribution(text, label)
+                    scores, tokenized_text, _ = attributor.get_attribution(text, label)
                     target_indices = torch.topk(scores, config['target_selection_k'], largest=target_selection=='k_most_attributed').indices.tolist()
                 else:
                     target_indices = torch.randint(0, scores.shape[0], (config['target_selection_k'],))

@@ -1,12 +1,33 @@
-from textattack.transformations import WordSwapInflections
-from textattack.shared.attacked_text import AttackedText
+from lemminflect import getLemma, getAllInflections
+from flair.data import Sentence, Tokenizer
+from textattack.shared.utils import flair_tag
 
 def word_inflection(sample, indices_to_swap):
-    transformation = WordSwapInflections()
-    result = transformation._get_transformations(sample, indices_to_swap)
-    result = [x.text for x in result]
-    return result
+    sent = Sentence(" ".join(sample), use_tokenizer=TokenizerForFlair())
+    flair_tag(sent)
+    pos_tags = [token.annotation_layers["pos"][0]._value for token in sent]
+    attacks = []
+    for idx in indices_to_swap:
+        inflections = get_inflections(sample[idx], pos_tags[idx])
+        for infl in inflections:
+            attacks.append(' '.join(sample[:idx]+[infl]+sample[idx+1:]))
+    return attacks
+    
+        
+def get_inflections(word, pos_tag):
+    lemma = getLemma(word, pos_tag)
+    inflections = getAllInflections(lemma[0])
+    inflections = [inflections[k][0] for k in inflections]
+    return inflections
+
+class TokenizerForFlair(Tokenizer):
+    def tokenize(self, text: str):
+        return text.split()
+
+    @property
+    def name(self):
+        return self.__class__.__name__
 
 
 if __name__=='__main__':
-    print(word_inflection("The movie is great", [1]))
+    print(word_inflection(["The", "movie", "is", "great"], [1]))

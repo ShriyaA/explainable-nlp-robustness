@@ -10,7 +10,7 @@ def synonym_substitution(substitution_method, max_candidates, sample, indices_to
         transformation = WordSwapMaskedLM(max_candidates=max_candidates)
     else:
         raise NotImplementedError()
-    sample = AttackedText(sample)
+    sample = AttackedText(' '.join(sample))
     result = transformation._get_transformations(sample, indices_to_swap)
     result = [x.text for x in result]
     return result

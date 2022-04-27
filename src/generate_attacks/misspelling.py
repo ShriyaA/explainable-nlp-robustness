@@ -10,14 +10,14 @@ def get_misspelled_word(word, misspell_dict):
     index = randrange(len(word))
     return word[:index]+word[index+1:]
 
-def misspelling(text, target_indices, remove_punctuation=False):
+def misspelling(tokens, target_indices, remove_punctuation=False):
     
     misspellings_dict_path = "data/misspellings.pkl"
     check_paths_exist(misspellings_dict_path)
     with open(misspellings_dict_path, 'rb') as handle:
         misspellings_dict = pickle.load(handle)
 
-    tokens = text.split(' ')
+    #tokens = text.split(' ')
     tokens = [x if i not in target_indices else get_misspelled_word(x, misspellings_dict) for i,x in enumerate(tokens)]
     edited = ' '.join(tokens)
     return [edited]

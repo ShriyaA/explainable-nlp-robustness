@@ -104,7 +104,7 @@ def greedy_search(**config):
                     text = clean_text(text)
                 
                 label = int(row[1])
-                attr_scores, _ = attributor.get_attribution(text, label, word_level=True)
+                attr_scores, tokenized_text, _ = attributor.get_attribution(text, label, word_level=True)
                 num_candidates = int(config['pct_candidates'] * attr_scores.shape[0])
                 target_indices = torch.topk(attr_scores, num_candidates, largest=config['target_selection']=='most').indices.tolist()
                 target_indices = set(target_indices)
@@ -120,24 +120,21 @@ def greedy_search(**config):
                     min_pred = None
                     pred_change_indices = []
                     for idx in target_indices:
-                        if attack_type == 'word_deletion':
-                            new_attacks = transformation(text, curr_deleted_idx + [idx])[0]
-                        else:
-                            new_attacks = transformation(curr_text, idx)[0]
+                        new_attacks = transformation(tokenized_text, curr_deleted_idx + [idx])
                         new_attack = new_attacks[0]
 
                         if attack_type == 'synonym_substitution' or attack_type == 'word_inflection':
                             current_word_min_score = float('inf')
                             best_attack = new_attacks[0]
                             for i,attack in enumerate(new_attacks):
-                                current_word_new_attr, current_word_pred = attributor.get_attribution(attack, label, word_level=True, combination_method=config['combination_method'])
+                                current_word_new_attr, _, current_word_pred = attributor.get_attribution(attack, label, word_level=True, combination_method=config['combination_method'])
                                 current_word_score = scoring_func(attr_scores, current_word_new_attr)
                                 if current_word_score < current_word_min_score:
                                     current_word_min_score = current_word_score
                                     best_attack = new_attacks[i]
                             new_attack = best_attack
                         
-                        new_attr, pred = attributor.get_attribution(new_attack, label, word_level=True, combination_method=config['combination_method'])
+                        new_attr, _, pred = attributor.get_attribution(new_attack, label, word_level=True, combination_method=config['combination_method'])
                         if pred != label:
                             pred_change_indices.append(idx)
                             continue
