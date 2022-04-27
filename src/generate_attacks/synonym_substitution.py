@@ -1,7 +1,4 @@
 from textattack.transformations import WordSwapWordNet, WordSwapMaskedLM, WordSwapEmbedding
-from textattack.augmentation import Augmenter
-from textattack.constraints.pre_transformation import StopwordModification
-from textattack.constraints.grammaticality import PartOfSpeech
 from textattack.shared.attacked_text import AttackedText
 
 def synonym_substitution(substitution_method, max_candidates, sample, indices_to_swap):

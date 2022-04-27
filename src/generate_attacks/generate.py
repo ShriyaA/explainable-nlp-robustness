@@ -4,6 +4,7 @@ import csv
 import torch
 
 from functools import partial
+from generate_attacks.word_inflection import word_inflection
 from utils.utils import check_paths_exist
 from generate_attacks.word_deletion import word_deletion
 from generate_attacks.misspelling import misspelling
@@ -13,7 +14,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from tqdm import tqdm
 
 @click.command()
-@click.option("--attack_type", type=click.Choice(['word_deletion', 'misspelling', 'synonym_substitution']), required=True)
+@click.option("--attack_type", type=click.Choice(['word_deletion', 'misspelling', 'synonym_substitution', 'word_inflection']), required=True)
 @click.option("--seed", type=int)
 @click.option("--output_file", type=str, default="./output/attacks.csv")
 @click.option("--max_candidates", type=int, default=5, help="Number of transformations to create for each input sentence. Used in synonym substitution")
@@ -47,6 +48,8 @@ def generate(**config):
         transformation = partial(word_deletion)
     elif attack_type == 'misspelling':
         transformation = partial(misspelling)
+    elif attack_type == 'word_inflection':
+        transformation = partial(word_inflection)
     
     output = []
 

@@ -14,6 +14,7 @@ from utils.utils import check_paths_exist
 from generate_attacks.word_deletion import word_deletion
 from generate_attacks.misspelling import misspelling
 from generate_attacks.synonym_substitution import synonym_substitution
+from generate_attacks.word_inflection import word_inflection
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from attribution.attribution import Attribution
 from evaluation import scoring
@@ -53,12 +54,12 @@ def extend_scores(scores, deleted_indexes):
 @click.option('--target_selection', type=click.Choice(['most', 'least', 'random']), default='most')
 @click.option("--evaluation_method", type=click.Choice(['cosine', 'l_inf']), default='cosine')
 @click.option("--stopping_threshold", type=float, default=0.5)
-@click.option("--attack_type", type=click.Choice(['word_deletion', 'misspelling', 'synonym_substitution', 'composite']), required=True)
+@click.option("--attack_type", type=click.Choice(['word_deletion', 'misspelling', 'synonym_substitution', 'word_inflection', 'composite']), required=True)
 @click.option("--model_name", type=str, default="textattack/roberta-base-SST-2", help="Huggingface model id")
 @click.option("--explainability_method", type=str, default="IntegratedGradients", help="Algorithm to use for generating saliency maps")
 @click.option("--output_file", type=str, default="./output/attacks.csv")
 @click.option('--clean_text', type=bool, default=False)
-@click.option("--combination_method", type=click.Choice(['sum', 'max', 'avg']), default='sum')
+@click.option("--combination_method", type=click.Choice(['sum', 'max', 'avg']), default='avg')
 @click.argument("data_file")
 def greedy_search(**config):
 
@@ -79,6 +80,8 @@ def greedy_search(**config):
         transformation = partial(word_deletion)
     elif attack_type == 'misspelling':
         transformation = partial(misspelling)
+    elif attack_type == 'word_inflection':
+        transformation = partial(word_inflection)
 
     attributor = Attribution(model, tokenizer, device, config['explainability_method'])
     output = [('original_text', 'best_attack', 'true_label', 'score', 'attack_type', 'affected_indices')]
@@ -115,11 +118,15 @@ def greedy_search(**config):
                     min_score = float('inf')
                     min_text = None
                     min_pred = None
+                    pred_change_indices = []
                     for idx in target_indices:
-                        new_attacks = transformation(text, curr_deleted_idx + [idx])[0]
+                        if attack_type == 'word_deletion':
+                            new_attacks = transformation(text, curr_deleted_idx + [idx])[0]
+                        else:
+                            new_attacks = transformation(curr_text, idx)[0]
                         new_attack = new_attacks[0]
 
-                        if attack_type == 'synonym_substitution':
+                        if attack_type == 'synonym_substitution' or attack_type == 'word_inflection':
                             current_word_min_score = float('inf')
                             best_attack = new_attacks[0]
                             for i,attack in enumerate(new_attacks):
@@ -131,6 +138,9 @@ def greedy_search(**config):
                             new_attack = best_attack
                         
                         new_attr, pred = attributor.get_attribution(new_attack, label, word_level=True, combination_method=config['combination_method'])
+                        if pred != label:
+                            pred_change_indices.append(idx)
+                            continue
                         
                         if attack_type == 'word_deletion':
                             new_attr = extend_scores(new_attr, curr_deleted_idx + [idx])
@@ -142,17 +152,17 @@ def greedy_search(**config):
                             min_score = curr_score
                             min_pred = pred
                     
+                    if len(pred_change_indices) == len(target_indices):
+                        break
+
                     curr_deleted_idx.append(min_idx)
                     target_indices.remove(min_idx)
                     similarity_score = min_score
                     curr_text = min_text
                     curr_pred = min_pred
-                    if curr_pred != label:
-                        break
-                
-                if similarity_score <= config["stopping_threshold"] and curr_pred == label:
-                    with open(output_file, 'a') as f:
-                        writer = csv.writer(f)
-                        writer.writerow([text, curr_text, label, round(similarity_score, 4), config['attack_type'], curr_deleted_idx])
+
+                with open(output_file, 'a') as f:
+                    writer = csv.writer(f)
+                    writer.writerow([text, curr_text, label, curr_pred, round(similarity_score, 4), config['attack_type'], curr_deleted_idx])
                 
                 pbar.update(1)
