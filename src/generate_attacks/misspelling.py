@@ -2,13 +2,17 @@ import pickle
 from random import randrange
 from utils.utils import check_paths_exist
 
-def get_misspelled_word(word, misspell_dict):
-    
-    if word in misspell_dict:
-        return misspell_dict[word][0]
-    
-    index = randrange(len(word))
-    return word[:index]+word[index+1:]
+from textattack.transformations import WordSwapQWERTY
+from textattack.augmentation import Augmenter
+
+def get_misspelled_word(word, misspell_dict, augmenter):
+    try:
+        if word in misspell_dict:
+            return misspell_dict[word][0]
+        
+        return augmenter.augment(word)[0]
+    except:
+        return word
 
 def misspelling(text, target_indices, remove_punctuation=False):
     
