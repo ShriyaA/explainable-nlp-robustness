@@ -25,9 +25,8 @@ def plotting(**config):
         with open(input_file) as f:
             reader = csv.reader(f)
             scores = [float(row[3]) for row in tqdm(reader) if row[3]!="score"]
-
-    plot_scores_bucket(scores, output_file_2)
-    plot_scores_cumulative(scores, output_file_1)
+    plot_scores_bucket(scores, output_file_1)
+    plot_scores_cumulative(scores, output_file_2)
 
 
 def plot_scores_cumulative(scores, file_name):
@@ -57,7 +56,6 @@ def plot_scores_bucket(scores, file_name):
             frequencies.append(counts[key])
         else:
             frequencies.append(0)
-    
     x_coordinates = list(range(len(keys)))
     ax.bar(x_coordinates, frequencies, align='center')
 
