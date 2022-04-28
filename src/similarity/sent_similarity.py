@@ -3,8 +3,8 @@ import csv
 
 from tqdm import tqdm
 from utils.utils import check_paths_exist
-import matplotlib.pyplot as plt
 from collections import Counter
+from sentence_transformers import SentenceTransformer, util
 
 @click.command()
 @click.option("--input_file", type=str, default="./output/search.csv")
@@ -23,12 +23,14 @@ def sent_similarity(**config):
 	with open(input_file) as f:
 		num_lines = sum(1 for line in f)
 
+	model = SentenceTransformer('all-mpnet-base-v2')
+
 	with tqdm(total=num_lines) as pbar:
 		with open(input_file) as f:
 			reader = csv.reader(f)
 			for row in tqdm(reader):
 				if row[0]!="original_text":
-					data.append(row+[str(get_BERT_similarity(row[0],row[1]))])
+					data.append(row+[str(get_BERT_similarity(model,row[0],row[1]))])
 				pbar.update(1)
 
 	with open(output_file, 'a') as f:
@@ -36,5 +38,8 @@ def sent_similarity(**config):
 		for row in data:
 			writer.writerow(row)
 
-def get_BERT_similarity(sent1, sent2):
-	return 0.5
+def get_BERT_similarity(model, sent1, sent2):
+	emb1 = model.encode(sent1)
+	emb2 = model.encode(sent2)
+	sim = float(util.cos_sim(emb1, emb2))
+	return round(sim,2)

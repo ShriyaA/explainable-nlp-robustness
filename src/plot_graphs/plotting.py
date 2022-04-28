@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from collections import Counter
 
 @click.command()
-@click.option("--input_file", type=str, default="./output/scores.csv")
+@click.option("--input_file", type=str, default="./output/search.csv")
 @click.option("--output_file_1", type=str, default="./output/plot-cumulative.png")
 @click.option("--output_file_2", type=str, default="./output/plot-buckets.png")
 def plotting(**config):
