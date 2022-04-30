@@ -84,7 +84,7 @@ def greedy_search(**config):
         transformation = partial(word_inflection)
 
     attributor = Attribution(model, tokenizer, device, config['explainability_method'])
-    output = ('original_text', 'best_attack', 'true_label', 'predicted_label', 'score', 'affected_indices')
+    output = ['original_text', 'best_attack', 'true_label', 'predicted_label', 'score', 'attack_type', 'affected_indices']
     scoring_func = getattr(scoring, config['evaluation_method'])
 
     num_lines = 0
@@ -113,7 +113,7 @@ def greedy_search(**config):
                 similarity_score = float('inf')
                 curr_deleted_idx = []
                 curr_text = text
-                curr_pred = label
+                curr_pred =  torch.tensor(label)
 
                 while similarity_score > config["stopping_threshold"] and (len(target_indices) != 0):
                     min_idx = -1
@@ -167,6 +167,6 @@ def greedy_search(**config):
 
                 with open(output_file, 'a') as f:
                     writer = csv.writer(f)
-                    writer.writerow([text, curr_text, label, curr_pred, round(similarity_score, 4), curr_deleted_idx])
+                    writer.writerow([text, curr_text, label, curr_pred.item(), round(similarity_score, 4), config['attack_type'], curr_deleted_idx])
                 
                 pbar.update(1)
