@@ -48,6 +48,10 @@ Misspelling
 
 	python src/__main__.py plotting
 
+## Sentence Similarity
+
+	python src/__main__.py sent-similarity
+
 ## Input format
 
 The input file should be a two-column csv file with text sample in the first column and true label in the second column. Example:

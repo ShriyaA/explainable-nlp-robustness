@@ -21,7 +21,10 @@ def misspelling(text, target_indices, remove_punctuation=False):
     with open(misspellings_dict_path, 'rb') as handle:
         misspellings_dict = pickle.load(handle)
 
+    transformation = WordSwapQWERTY(random_one=True)
+    augmenter = Augmenter(transformation=transformation)
+
     tokens = text.split(' ')
-    tokens = [x if i not in target_indices else get_misspelled_word(x, misspellings_dict) for i,x in enumerate(tokens)]
+    tokens = [x if i not in target_indices else get_misspelled_word(x, misspellings_dict, augmenter) for i,x in enumerate(tokens)]
     edited = ' '.join(tokens)
     return [edited]

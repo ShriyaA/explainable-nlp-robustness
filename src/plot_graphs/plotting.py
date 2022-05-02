@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from collections import Counter
 
 @click.command()
-@click.option("--input_file", type=str, default="./output/scores.csv")
+@click.option("--input_file", type=str, default="./output/search.csv")
 @click.option("--output_file_1", type=str, default="./output/plot-cumulative.png")
 @click.option("--output_file_2", type=str, default="./output/plot-buckets.png")
 def plotting(**config):
@@ -24,8 +24,7 @@ def plotting(**config):
     with tqdm(total=num_lines) as pbar:
         with open(input_file) as f:
             reader = csv.reader(f)
-            scores = [float(row[4]) for row in tqdm(reader) if row[2]==row[3]]
-
+            scores = [float(row[3]) for row in tqdm(reader) if row[3]!="score"]
     plot_scores_bucket(scores, output_file_1)
     plot_scores_cumulative(scores, output_file_2)
 
@@ -34,7 +33,7 @@ def plot_scores_cumulative(scores, file_name):
     cosine_threshold = [0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]
     successful_attacks = []
     for threshold in cosine_threshold:
-        mask = [i for i in scores if i<=threshold]
+        mask = [i for i in scores if i<=threshold and i>=0]
         successful_attacks.append(len(mask))
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -47,7 +46,6 @@ def plot_scores_cumulative(scores, file_name):
 def plot_scores_bucket(scores, file_name):
     scores = [round(item, 1) for item in scores]
     counts = Counter(scores)
-
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
@@ -58,7 +56,6 @@ def plot_scores_bucket(scores, file_name):
             frequencies.append(counts[key])
         else:
             frequencies.append(0)
-
     x_coordinates = list(range(len(keys)))
     ax.bar(x_coordinates, frequencies, align='center')
 
