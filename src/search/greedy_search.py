@@ -105,7 +105,6 @@ def greedy_search(**config):
                 
                 label = int(row[1])
                 attr_scores, tokenized_text, _ = attributor.get_attribution(text, label, word_level=True)
-                tokenized_text = [tokenizer.convert_tokens_to_string(text).strip() for text in tokenized_text]
                 
                 num_candidates = int(config['pct_candidates'] * attr_scores.shape[0])
                 target_indices = torch.topk(attr_scores, num_candidates, largest=config['target_selection']=='most').indices.tolist()
@@ -115,14 +114,22 @@ def greedy_search(**config):
                 curr_text = text
                 curr_pred =  torch.tensor(label)
 
+                min_tokenized_text = tokenized_text
                 while similarity_score > config["stopping_threshold"] and (len(target_indices) != 0):
                     min_idx = -1
                     min_score = float('inf')
                     min_text = None
                     min_pred = None
                     no_viable_attack_indices = []
+                    if attack_type != 'word_deletion':
+                        tokenized_text = min_tokenized_text
+                    
                     for idx in target_indices:
-                        new_attacks = transformation(tokenized_text, curr_deleted_idx + [idx])
+                    
+                        if attack_type == 'word_deletion':
+                            new_attacks = transformation(tokenized_text, curr_deleted_idx + [idx])
+                        else:
+                            new_attacks = transformation(tokenized_text, [idx])
 
                         if len(new_attacks) == 0:
                             no_viable_attack_indices.append(idx)
@@ -141,7 +148,7 @@ def greedy_search(**config):
                                     best_attack = new_attacks[i]
                             new_attack = best_attack
                         
-                        new_attr, _, pred = attributor.get_attribution(new_attack, label, word_level=True, combination_method=config['combination_method'])
+                        new_attr, curr_tokenized_text, pred = attributor.get_attribution(new_attack, label, word_level=True, combination_method=config['combination_method'])
                         if pred != label:
                             no_viable_attack_indices.append(idx)
                             continue
@@ -155,6 +162,7 @@ def greedy_search(**config):
                             min_text = new_attack
                             min_score = curr_score
                             min_pred = pred
+                            min_tokenized_text = curr_tokenized_text
                     
                     if len(no_viable_attack_indices) == len(target_indices):
                         break
