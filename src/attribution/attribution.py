@@ -69,7 +69,7 @@ class Attribution():
         attributions_sum = attributions_sum[1:][:-1]
         if word_level:
             attributions_sum, tokens = self.word_level_attribution(tokens, attributions_sum.tolist(), combination_method)
-        return attributions_sum, tokens, torch.argmax(scores)
+        return attributions_sum, [x[1:] if x[0] == 'Ġ' else x for x in tokens], torch.argmax(scores)
 
     def word_level_attribution(self, tokens, token_attr_scores, combination_method='avg'):
         '''

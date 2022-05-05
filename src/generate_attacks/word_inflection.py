@@ -11,13 +11,17 @@ def word_inflection(sample, indices_to_swap):
         inflections = get_inflections(sample[idx], pos_tags[idx])
         for infl in inflections:
             attacks.append(' '.join(sample[:idx]+[infl]+sample[idx+1:]))
+    if len(attacks) == 0:
+        attacks = [" ".join(sample)]
     return attacks
     
         
 def get_inflections(word, pos_tag):
     lemma = getLemma(word, pos_tag)
+    if len(lemma) == 0:
+        lemma = word
     inflections = getAllInflections(lemma[0])
-    inflections = [inflections[k][0] for k in inflections]
+    inflections = [inflections[k][0] for k in inflections if inflections[k][0] != word]
     return inflections
 
 class TokenizerForFlair(Tokenizer):
@@ -30,4 +34,4 @@ class TokenizerForFlair(Tokenizer):
 
 
 if __name__=='__main__':
-    print(word_inflection(["The", "movie", "is", "great"], [1]))
+    print(word_inflection(["The", "movie", "is", "great"], [3]))
