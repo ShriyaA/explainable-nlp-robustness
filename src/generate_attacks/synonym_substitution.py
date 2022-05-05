@@ -15,7 +15,10 @@ def synonym_substitution(substitution_method, max_candidates, sample, indices_to
     else:
         raise NotImplementedError()
     text = AttackedText(' '.join(sample))
-    result = transformation._get_transformations(text, indices_to_swap)
+    try:
+        result = transformation._get_transformations(text, indices_to_swap[0])
+    except:
+        result = []
     result = filter_inflections(sample, result, indices_to_swap[0])
     result = [x.text for x in result]
     return result[:min(len(result), max_candidates)]
@@ -25,7 +28,10 @@ def filter_inflections(sample, result, index_swapped):
     sent = Sentence(" ".join(sample), use_tokenizer=TokenizerForFlair())
     flair_tag(sent)
     pos_tags = [token.annotation_layers["pos"][0]._value for token in sent]
-    orig_lemma = getLemma(orig_word, pos_tags[index_swapped])[0]
+    orig_lemma = getLemma(orig_word, pos_tags[index_swapped])
+    if len(orig_lemma)==0:
+        return result
+    orig_lemma = orig_lemma[0]
     
     result_filtered = []
 
@@ -34,7 +40,14 @@ def filter_inflections(sample, result, index_swapped):
         sent = Sentence(x.text, use_tokenizer=TokenizerForFlair())
         flair_tag(sent)
         pos_tags = [token.annotation_layers["pos"][0]._value for token in sent]
-        new_lemma = getLemma(new_word, pos_tags[index_swapped])[0]
+        if pos_tags[index_swapped] not in ['NOUN', 'PROPN', 'VERB', 'ADJ', 'ADV', 'AUX']:
+            result_filtered.append(x)
+            continue
+        new_lemma = getLemma(new_word, pos_tags[index_swapped])
+        if len(new_lemma)==0:
+            result_filtered.append(x)
+            continue
+        new_lemma = new_lemma[0]
         if new_lemma != orig_lemma:
             result_filtered.append(x)
     return result_filtered
