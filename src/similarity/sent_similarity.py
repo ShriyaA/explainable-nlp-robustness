@@ -16,8 +16,8 @@ def sent_similarity(**config):
 
 	with open(output_file, 'a') as f:
 		writer = csv.writer(f)
-		writer.writerow(['original_text', 'adversarial_text', 'label', 'expl_score', 'sent_score'])
-
+		writer.writerow(['original_text','best_attack','true_label','predicted_label','score','attack_type','affected_indices','sent_score'])
+	
 	data=[]
 	num_lines = 0
 	with open(input_file) as f:
