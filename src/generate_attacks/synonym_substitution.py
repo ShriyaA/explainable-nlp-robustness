@@ -3,7 +3,7 @@ from textattack.shared.attacked_text import AttackedText
 from lemminflect import getLemma
 from flair.data import Sentence
 from textattack.shared.utils import flair_tag
-from word_inflection import TokenizerForFlair
+from generate_attacks.word_inflection import TokenizerForFlair
 
 def synonym_substitution(substitution_method, max_candidates, sample, indices_to_swap):
     if substitution_method == 'wordnet':

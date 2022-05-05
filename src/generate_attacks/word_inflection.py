@@ -11,12 +11,14 @@ def word_inflection(sample, indices_to_swap):
         inflections = get_inflections(sample[idx], pos_tags[idx])
         for infl in inflections:
             attacks.append(' '.join(sample[:idx]+[infl]+sample[idx+1:]))
-    if len(attacks) == 0:
-        attacks = [" ".join(sample)]
+    #if len(attacks) == 0:
+    #    attacks = [" ".join(sample)]
     return attacks
     
         
 def get_inflections(word, pos_tag):
+    if pos_tag not in ['NOUN', 'PROPN', 'VERB', 'ADJ', 'ADV', 'AUX']:
+        return []
     lemma = getLemma(word, pos_tag)
     if len(lemma) == 0:
         lemma = word
