@@ -120,9 +120,14 @@ def greedy_search(**config):
                     min_score = float('inf')
                     min_text = None
                     min_pred = None
-                    pred_change_indices = []
+                    no_viable_attack_indices = []
                     for idx in target_indices:
                         new_attacks = transformation(tokenized_text, curr_deleted_idx + [idx])
+
+                        if len(new_attacks) == 0:
+                            no_viable_attack_indices.append(idx)
+                            continue
+
                         new_attack = new_attacks[0]
 
                         if attack_type == 'synonym_substitution' or attack_type == 'word_inflection':
@@ -138,7 +143,7 @@ def greedy_search(**config):
                         
                         new_attr, _, pred = attributor.get_attribution(new_attack, label, word_level=True, combination_method=config['combination_method'])
                         if pred != label:
-                            pred_change_indices.append(idx)
+                            no_viable_attack_indices.append(idx)
                             continue
                         
                         if attack_type == 'word_deletion':
@@ -151,7 +156,7 @@ def greedy_search(**config):
                             min_score = curr_score
                             min_pred = pred
                     
-                    if len(pred_change_indices) == len(target_indices):
+                    if len(no_viable_attack_indices) == len(target_indices):
                         break
 
                     curr_deleted_idx.append(min_idx)
