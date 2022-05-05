@@ -37,7 +37,21 @@ Word Deletion:
 Misspelling:
 
 	python src/__main__.py generate data/glue-sst2-validation.csv --attack_type misspelling
-		
+
+## Greedy Search
+
+Misspelling
+
+	python src/__main__.py greedy-search data/glue-sst2-validation.csv --target_selection most --attack_type misspelling --clean_text True --combination_method sum --output_file ./output/search.csv
+
+## Plotting
+
+	python src/__main__.py plotting
+
+## Sentence Similarity
+
+	python src/__main__.py sent-similarity
+
 ## Input format
 
 The input file should be a two-column csv file with text sample in the first column and true label in the second column. Example:
