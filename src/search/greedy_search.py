@@ -142,6 +142,7 @@ def greedy_search(**config):
                             new_attack = best_attack
                         
                         new_attr, _, pred = attributor.get_attribution(new_attack, label, word_level=True, combination_method=config['combination_method'])
+                        pred = pred.item()
                         if pred != label:
                             no_viable_attack_indices.append(idx)
                             continue

@@ -16,10 +16,13 @@ def synonym_substitution(substitution_method, max_candidates, sample, indices_to
         raise NotImplementedError()
     text = AttackedText(' '.join(sample))
     try:
-        result = transformation._get_transformations(text, indices_to_swap[0])
+        result = transformation._get_transformations(text, [indices_to_swap[0]])
     except:
         result = []
-    result = filter_inflections(sample, result, indices_to_swap[0])
+    try:
+        result = filter_inflections(sample, result, indices_to_swap[0])
+    except:
+        pass
     result = [x.text for x in result]
     return result[:min(len(result), max_candidates)]
 

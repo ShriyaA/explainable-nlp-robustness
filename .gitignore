@@ -133,3 +133,4 @@ dmypy.json
 # Output files
 output/
 .vscode/
+slurm_logs/
