@@ -14,7 +14,7 @@ def get_misspelled_word(word, misspell_dict, augmenter):
     except:
         return word
 
-def misspelling(text, target_indices, remove_punctuation=False):
+def misspelling(tokens, target_indices, remove_punctuation=False):
     
     misspellings_dict_path = "data/misspellings.pkl"
     check_paths_exist(misspellings_dict_path)
@@ -24,7 +24,7 @@ def misspelling(text, target_indices, remove_punctuation=False):
     transformation = WordSwapQWERTY(random_one=True)
     augmenter = Augmenter(transformation=transformation)
 
-    tokens = text.split(' ')
+    #tokens = text.split(' ')
     tokens = [x if i not in target_indices else get_misspelled_word(x, misspellings_dict, augmenter) for i,x in enumerate(tokens)]
     edited = ' '.join(tokens)
     return [edited]

@@ -45,8 +45,8 @@ def evaluate(**config):
                 attacked_text = row[1]
                 true_label = row[2]
 
-                orig_scores, _ = attributor.get_attribution(orig_text, true_label, word_level=True)
-                attacked_scores, predicted_label = attributor.get_attribution(attacked_text, true_label, word_level=True)
+                orig_scores, _, _ = attributor.get_attribution(orig_text, true_label, word_level=True)
+                attacked_scores, _, predicted_label = attributor.get_attribution(attacked_text, true_label, word_level=True)
 
                 score = scoring_func(orig_scores, attacked_scores)
 

@@ -68,8 +68,8 @@ class Attribution():
         tokens = self.tokenizer.convert_ids_to_tokens(indices)[1:][:-1]
         attributions_sum = attributions_sum[1:][:-1]
         if word_level:
-            attributions_sum = self.word_level_attribution(tokens, attributions_sum.tolist(), combination_method)
-        return attributions_sum, torch.argmax(scores)
+            attributions_sum, tokens = self.word_level_attribution(tokens, attributions_sum.tolist(), combination_method)
+        return attributions_sum, [x[1:] if x[0] == 'Ġ' else x for x in tokens], torch.argmax(scores)
 
     def word_level_attribution(self, tokens, token_attr_scores, combination_method='avg'):
         '''
@@ -81,6 +81,7 @@ class Attribution():
         '''
         # Convert tokens to words by joining and calc. score by adding scores of all the tokens in a word
         score_word_list = []
+        word_list = []
         curr_list = []
         curr_scores = []
         curr_str = ""
@@ -93,6 +94,7 @@ class Attribution():
                 else:
                     curr_score = sum(curr_scores)/len(curr_scores)
                 score_word_list.append(curr_score)
+                word_list.append(curr_str)
                 curr_scores = []
                 curr_list = []
                 curr_str = ""
@@ -107,7 +109,8 @@ class Attribution():
         else:
             curr_score = sum(curr_scores)/len(curr_scores)
         score_word_list.append(curr_score)
-        return torch.tensor(score_word_list, dtype=torch.float64)
+        word_list.append(curr_str)
+        return torch.tensor(score_word_list, dtype=torch.float64), word_list
 
 
 if __name__=='__main__':

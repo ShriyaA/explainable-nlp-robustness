@@ -4,6 +4,7 @@ import csv
 import torch
 
 from functools import partial
+from generate_attacks.word_inflection import word_inflection
 from utils.utils import check_paths_exist
 from generate_attacks.word_deletion import word_deletion
 from generate_attacks.misspelling import misspelling
@@ -13,12 +14,11 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from tqdm import tqdm
 
 @click.command()
-@click.option("--attack_type", type=click.Choice(['word_deletion', 'misspelling', 'synonym_substitution']), required=True)
+@click.option("--attack_type", type=click.Choice(['word_deletion', 'misspelling', 'synonym_substitution', 'word_inflection']), required=True)
 @click.option("--seed", type=int)
 @click.option("--output_file", type=str, default="./output/attacks.csv")
-@click.option("--pct_words_to_swap", type=float, default="0.1", help="Percentage of words to swap. Used only if attack_type is synonym_substitution")
-@click.option("--transformations_per_example", type=int, default=1, help="Number of transformations to create for each input sentence.")
-@click.option("--substitution_method", type=click.Choice(['wordnet', 'masked_lm']), default='masked_lm', help="Method to use for finding synonyms. Used only if attack_type is synonym_substitution")
+@click.option("--max_candidates", type=int, default=5, help="Number of transformations to create for each input sentence. Used in synonym substitution")
+@click.option("--substitution_method", type=click.Choice(['wordnet', 'masked-lm', 'embedding']), default='masked-lm', help="Method to use for finding synonyms. Used only if attack_type is synonym_substitution")
 @click.option("--model_name", type=str, default="textattack/roberta-base-SST-2", help="Huggingface model id")
 @click.option("--explainability_method", type=str, default="IntegratedGradients", help="Algorithm to use for generating saliency maps")
 @click.option("--target_selection", type=click.Choice(['k_most_attributed', 'k_least_attributed', 'random']), default='k_most_attributed', help="Method to select words to modify")
@@ -43,11 +43,13 @@ def generate(**config):
         attributor = Attribution(model, tokenizer, device, config['explainability_method'])
 
     if attack_type == 'synonym_substitution':
-        transformation = partial(synonym_substitution, config["substitution_method"], config["pct_words_to_swap"], config["transformations_per_example"])
+        transformation = partial(synonym_substitution, config["substitution_method"], config['max_candidates'])
     elif attack_type == 'word_deletion':
         transformation = partial(word_deletion)
     elif attack_type == 'misspelling':
         transformation = partial(misspelling)
+    elif attack_type == 'word_inflection':
+        transformation = partial(word_inflection)
     
     output = []
 
@@ -62,7 +64,7 @@ def generate(**config):
                 text = row[0]
                 label = row[1]
                 if target_selection == 'k_most_attributed' or target_selection == 'k_least_attributed':
-                    scores, _ = attributor.get_attribution(text, label)
+                    scores, tokenized_text, _ = attributor.get_attribution(text, label)
                     target_indices = torch.topk(scores, config['target_selection_k'], largest=target_selection=='k_most_attributed').indices.tolist()
                 else:
                     target_indices = torch.randint(0, scores.shape[0], (config['target_selection_k'],))
