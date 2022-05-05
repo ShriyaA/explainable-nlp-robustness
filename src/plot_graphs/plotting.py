@@ -23,7 +23,7 @@ def plotting(**config):
 
     with open(input_file) as f:
         reader = csv.reader(f)
-        scores = [float(row[4]) for row in tqdm(reader) if row[4]!="score"]
+        scores = [float(row[4]) for row in tqdm(reader) if row[4]!="score" and row[2]==row[3]]
     plot_scores_cumulative(scores, output_file_1, scoring_method)
     plot_scores_bucket(scores, output_file_2, scoring_method)
 
