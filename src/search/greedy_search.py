@@ -105,6 +105,8 @@ def greedy_search(**config):
                 
                 label = int(row[1])
                 attr_scores, tokenized_text, _ = attributor.get_attribution(text, label, word_level=True)
+                tokenized_text = [tokenizer.convert_tokens_to_string(text).strip() for text in tokenized_text]
+                
                 num_candidates = int(config['pct_candidates'] * attr_scores.shape[0])
                 target_indices = torch.topk(attr_scores, num_candidates, largest=config['target_selection']=='most').indices.tolist()
                 target_indices = set(target_indices)
