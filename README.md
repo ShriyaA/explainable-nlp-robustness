@@ -46,7 +46,7 @@ Misspelling
 
 ## Plotting
 
-	python src/__main__.py plotting
+	python src/__main__.py plotting --scoring_method cosine
 
 ## Sentence Similarity
 
