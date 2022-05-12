@@ -1,4 +1,4 @@
-from captum.attr import LayerIntegratedGradients
+from captum.attr import LayerIntegratedGradients, Saliency, InputXGradient
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
@@ -47,6 +47,10 @@ class Attribution():
     def resolve_expl_method(self):
         if self.expl_method == 'IntegratedGradients':
             return LayerIntegratedGradients
+        if self.expl_method == 'Gradient':
+            return Saliency
+        if self.expl_method == 'InputXGradient':
+            return InputXGradient
 
     def get_attribution(self, text, true_label, word_level=True, combination_method='avg'):
         
